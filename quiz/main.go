@@ -48,7 +48,7 @@ func starQuiz(problem Problem, correct chan int) {
 }
 
 func run(problems Problems) (correct int) {
-	quizTimer := time.NewTimer(5 * time.Second)
+	quizTimer := time.NewTimer(30 * time.Second)
 	correctChan := make(chan int, 1)
 	for _, problem := range problems {
 		go starQuiz(problem, correctChan)
@@ -59,7 +59,7 @@ func run(problems Problems) (correct int) {
 		case result := <-correctChan:
 			correct += result
 		}
-		quizTimer.Reset(5 * time.Second)
+		quizTimer.Reset(30 * time.Second)
 	}
 	fmt.Println("quiz end!")
 	return
