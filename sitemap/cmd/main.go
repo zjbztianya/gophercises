@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"flag"
 	"fmt"
 	"github.com/zjbztianya/gophercises/link"
@@ -25,9 +26,9 @@ func fitter(links []string, fitterFn func(string) bool) []string {
 	return ret
 }
 
-func getUrls(baseUrl string, links []link.Link) []string {
+func getUrls(baseUrl string, pages []link.Link) []string {
 	var ret []string
-	for _, page := range links {
+	for _, page := range pages {
 		switch {
 		case strings.HasPrefix(page.Href, "/"):
 			ret = append(ret, baseUrl+page.Href)
@@ -38,25 +39,44 @@ func getUrls(baseUrl string, links []link.Link) []string {
 	return fitter(ret, withPrefix(baseUrl))
 }
 
-func bfs(baseUrl string, links []link.Link) []string {
-	//visit := make(map[string]struct{})
-	return nil
-}
-
-func main() {
-	urlFlag := flag.String("url", "https://www.baidu.com/", "url for build map site ")
-	flag.Parse()
-
-	resp, err := http.Get(*urlFlag)
+func httpGet(urlStr string) []string {
+	resp, err := http.Get(urlStr)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	defer resp.Body.Close()
 
-	links, _ := link.Parse(resp.Body)
+	pages, _ := link.Parse(resp.Body)
 	reqUrl := resp.Request.URL
 	baseUrl := url.URL{Scheme: reqUrl.Scheme, Host: reqUrl.Host}
-	pages := bfs(baseUrl.String(), links)
+	return getUrls(baseUrl.String(), pages)
+}
+
+func bfs(baseUrl string, maxDepth int) []string {
+	visit := make(map[string]struct{})
+	queue := list.New()
+	queue.PushBack(baseUrl)
+	visit[baseUrl] = struct{}{}
+	var ret []string
+	for i := 0; i < maxDepth && queue.Len() > 0; i++ {
+		urlStr := queue.Front().Value.(string)
+		queue.Remove(queue.Front())
+		ret = append(ret, urlStr)
+		for _, page := range httpGet(urlStr) {
+			if _, ok := visit[page]; !ok {
+				queue.PushBack(page)
+				visit[page] = struct{}{}
+			}
+		}
+	}
+	return ret
+}
+
+func main() {
+	urlFlag := flag.String("url", "https://gophercises.com", "url for build map site ")
+	depthFlag := flag.Int("depth", 5, "search depth for link ")
+	flag.Parse()
+	pages := bfs(*urlFlag, *depthFlag)
 	for _, page := range pages {
 		fmt.Println(page)
 	}
