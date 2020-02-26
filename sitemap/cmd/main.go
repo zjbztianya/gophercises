@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/zjbztianya/gophercises/link"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -26,7 +27,8 @@ func fitter(links []string, fitterFn func(string) bool) []string {
 	return ret
 }
 
-func getUrls(baseUrl string, pages []link.Link) []string {
+func getUrls(baseUrl string, r io.Reader) []string {
+	pages, _ := link.Parse(r)
 	var ret []string
 	for _, page := range pages {
 		switch {
@@ -46,10 +48,9 @@ func httpGet(urlStr string) []string {
 	}
 	defer resp.Body.Close()
 
-	pages, _ := link.Parse(resp.Body)
 	reqUrl := resp.Request.URL
 	baseUrl := url.URL{Scheme: reqUrl.Scheme, Host: reqUrl.Host}
-	return getUrls(baseUrl.String(), pages)
+	return getUrls(baseUrl.String(), resp.Body)
 }
 
 func bfs(baseUrl string, maxDepth int) []string {
