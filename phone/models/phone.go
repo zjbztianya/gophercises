@@ -23,9 +23,10 @@ func Init() error {
 	return createTable()
 }
 
-func Close()  {
+func Close() {
 	db.Close()
 }
+
 type PhoneNumber struct {
 	ID     int
 	Number string
