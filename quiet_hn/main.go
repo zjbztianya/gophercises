@@ -39,9 +39,9 @@ var (
 )
 
 func getStories(ids []int, resultCh chan result) []item {
-	var client hn.Client
 	for i, id := range ids {
 		go func(pos, id int) {
+			var client hn.Client
 			hnItem, err := client.GetItem(id)
 			res := result{pos: pos}
 			if err != nil {
@@ -149,7 +149,7 @@ func main() {
 	flag.IntVar(&numStories, "num_stories", 30, "the number of top stories to display")
 	flag.Parse()
 
-	tpl := template.Must(template.ParseFiles("quiet_hn/index.gohtml"))
+	tpl := template.Must(template.ParseFiles("index.gohtml"))
 
 	http.HandleFunc("/", handler(numStories, tpl))
 
